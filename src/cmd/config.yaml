@@ -1,0 +1,9 @@
+api-server:
+  url: "http://127.0.0.1:6666"
+workers:
+  - name: "worker-0"
+    url: "http://[::1]:3333"
+  - name: "worker-1"
+    url: "http://[::1]:4444"
+  - name: "worker-2"
+    url: "http://[::1]:5555"

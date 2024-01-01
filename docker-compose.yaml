@@ -1,0 +1,32 @@
+version: "3.8"
+services:
+  worker0:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - 3333:3333
+    volumes:
+      - ./:/app
+    environment:
+      - WORKER_NAME=worker-0
+  worker1:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - 4444:4444
+    volumes:
+      - ./:/app
+    environment:
+      - WORKER_NAME=worker-1
+  worker2:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - 5555:5555
+    volumes:
+      - ./:/app
+    environment:
+      - WORKER_NAME=worker-2

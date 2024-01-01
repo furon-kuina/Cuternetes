@@ -1,0 +1,7 @@
+specs:
+  - name: echo1
+    image: alpine
+    cmd: ["echo", "Hello from echo1"]
+  - name: echo2
+    image: alpine
+    cmd: ["echo", "Hello from echo2"]

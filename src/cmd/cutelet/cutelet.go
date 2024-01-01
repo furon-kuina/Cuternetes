@@ -1,31 +1,61 @@
 package main
 
 import (
+	"fmt"
+	"io"
 	"log"
+	"log/slog"
+	"os"
+	"strings"
 
 	"github.com/docker/docker/client"
+	c8s "github.com/furon-kuina/cuternetes/pkg"
 	"github.com/labstack/echo/v4"
-	"github.com/labstack/echo/v4/middleware"
+	slogecho "github.com/samber/slog-echo"
+	"gopkg.in/yaml.v3"
 )
 
-var cli *client.Client
+var (
+	workerName string
+	cli        *client.Client
+	c8sConfig  c8s.C8sConfig
+	port       string
+)
 
-func configure() {
+const c8sConfigPath string = "../config.yaml"
+
+func init() {
 	var err error
 	cli, err = client.NewClientWithOpts(client.FromEnv, client.WithAPIVersionNegotiation())
 	if err != nil {
 		log.Fatalf("failed to create Docker client: %v", err)
 	}
+
+	f, err := os.Open(c8sConfigPath)
+	if err != nil {
+		log.Fatalf("failed to open config file: %v", err)
+	}
+	data, err := io.ReadAll(f)
+	yaml.Unmarshal(data, &c8sConfig)
+	workerName = os.Getenv("WORKER_NAME")
+	for _, worker := range c8sConfig.Workers {
+		if worker.Name == workerName {
+			tmp := strings.Split(worker.Url, ":")
+			port = fmt.Sprint(tmp[len(tmp)-1])
+		}
+	}
 }
 
 func setRoutes(e *echo.Echo) {
+	e.GET("/", getDefaultHandler)
+	e.GET("/containers", getContainersHandler)
 	e.POST("/create", postCreateHandler)
 }
 
 func main() {
-	configure()
 	e := echo.New()
 	setRoutes(e)
-	e.Use(middleware.Logger())
-	e.Logger.Fatal(e.Start(":3333"))
+	logger := slog.New(slog.NewTextHandler(os.Stdout, nil))
+	e.Use(slogecho.New(logger))
+	e.Logger.Fatal(e.Start(":" + fmt.Sprint(port)))
 }

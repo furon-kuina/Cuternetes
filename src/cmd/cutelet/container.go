@@ -11,7 +11,7 @@ import (
 	c8s "github.com/furon-kuina/cuternetes/pkg"
 )
 
-func createContainer(c *c8s.Container) (err error) {
+func createContainer(c *c8s.ContainerSpec) (err error) {
 	defer c8s.Wrap(&err, "createContainer(%q)", c)
 	ctx := context.Background()
 	err = pullImage(ctx, c.Image)
@@ -19,9 +19,11 @@ func createContainer(c *c8s.Container) (err error) {
 		return err
 	}
 
-	resp, err := cli.ContainerCreate(ctx, &container.Config{
-		Image: c.Image,
-		Cmd:   c.Cmd}, nil, nil, nil, "")
+	resp, err := cli.ContainerCreate(ctx,
+		&container.Config{
+			Image: c.Image,
+			Cmd:   c.Cmd,
+		}, nil, nil, nil, "")
 
 	if err = cli.ContainerStart(ctx, resp.ID, types.ContainerStartOptions{}); err != nil {
 		return fmt.Errorf("failed to start container: %v", err)
