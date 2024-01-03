@@ -34,7 +34,7 @@ func main() {
 
 	ctx := context.Background()
 	c := NewContainerController(ctx)
-	c.Run(ctx, 1)
+	c.Run(ctx)
 }
 
 func setRoutes(e *echo.Echo) {

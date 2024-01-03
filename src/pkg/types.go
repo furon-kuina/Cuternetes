@@ -1,6 +1,9 @@
 package c8s
 
-import "github.com/docker/docker/api/types/strslice"
+import (
+	"github.com/docker/docker/api/types"
+	"github.com/docker/docker/api/types/strslice"
+)
 
 type ContainerSpec struct {
 	Name  string
@@ -15,9 +18,13 @@ type Spec struct {
 type ContainerStatusResponse struct {
 }
 
-type ContainerStatus struct {
+type ContainerState struct {
+	Status ContainerStatus
+}
+
+type Worker struct {
 	IsAvailable bool
-	Response    ContainerStatusResponse
+	Containers  []types.Container
 }
 
 type C8sConfig struct {
@@ -33,3 +40,15 @@ type WorkerConfig struct {
 type ApiServerConfig struct {
 	Url string
 }
+
+type ContainerStatus string
+
+const (
+	Created    ContainerStatus = "created"
+	Restarting ContainerStatus = "restarting"
+	Running    ContainerStatus = "running"
+	Removing   ContainerStatus = "removing"
+	Paused     ContainerStatus = "paused"
+	Exited     ContainerStatus = "exited"
+	Dead       ContainerStatus = "dead"
+)

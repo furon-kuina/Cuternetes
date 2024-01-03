@@ -2,9 +2,13 @@ package main
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"io"
 	"net/http"
+	"time"
+
+	"github.com/docker/docker/api/types"
 )
 
 type ContainerController struct {
@@ -23,23 +27,39 @@ type Controller interface {
 	Reconcile() error
 }
 
-func (c *ContainerController) Run(ctx context.Context, workerNum int) error {
+func (c *ContainerController) Run(ctx context.Context) error {
 	for {
-		for _, worker := range c8sConfig.Workers {
-			resp, err := http.Get(worker.Url + "/containers")
-			if err != nil {
-				fmt.Printf("got error on request: %v", err)
-			}
-			fmt.Printf("response: %#v", resp)
-			defer resp.Body.Close()
-			payload, err := io.ReadAll(resp.Body)
-			fmt.Println(payload)
-			if err != nil {
-				fmt.Printf("Failed to read response body: %v", err)
-			}
-			fmt.Println(payload)
+		workerContainers := c.GetContainerStatus(ctx)
+		for k, v := range workerContainers {
+			fmt.Printf("worker: %s, containers: %+v", k, v)
 		}
+		time.Sleep(5 * time.Second)
 	}
+}
+
+// never returns error
+// if something went wrong with communication,
+// it just fills the corresponding slot with nil
+func (c *ContainerController) GetContainerStatus(ctx context.Context) map[string][]types.Container {
+	workerContainers := make(map[string][]types.Container)
+	for _, worker := range c8sConfig.Workers {
+		resp, err := http.Get(worker.Url + "/containers")
+		if err != nil {
+			workerContainers[worker.Name] = nil
+			continue
+		}
+		defer resp.Body.Close()
+		payload, err := io.ReadAll(resp.Body)
+		if err != nil {
+			workerContainers[worker.Name] = nil
+			continue
+		}
+		var containers []types.Container
+		json.Unmarshal(payload, &containers)
+		fmt.Printf("containers of %s: %+v\n", worker.Name, containers)
+		workerContainers[worker.Name] = containers
+	}
+	return workerContainers
 }
 
 // func (c *ContainerController) runWorker(ctx context.Context) {

@@ -5,28 +5,32 @@ import (
 	"io"
 	"net/http"
 
+	"github.com/docker/docker/api/types"
 	c8s "github.com/furon-kuina/cuternetes/pkg"
 	"github.com/labstack/echo/v4"
 )
 
 func getContainersHandler(c echo.Context) error {
-	containerStatuses := []*c8s.ContainerStatus{}
-	for _, worker := range c8sConfig.Workers {
-		resp, err := http.Get(worker.Url)
-		status := new(c8s.ContainerStatus)
+	workers := make([]c8s.Worker, len(c8sConfig.Workers))
+	for i, worker := range c8sConfig.Workers {
+		resp, err := http.Get(worker.Url + "/containers")
 		if err != nil {
-			status.IsAvailable = false
+			workers[i].IsAvailable = false
 			continue
 		}
 		body, err := io.ReadAll(resp.Body)
 		if err != nil {
-			status.IsAvailable = false
+			workers[i].IsAvailable = false
 			continue
 		}
-		err = json.Unmarshal(body, &status.Response)
-		containerStatuses = append(containerStatuses, status)
+		var containers []types.Container
+		err = json.Unmarshal(body, &containers)
+		if err != nil {
+			workers[i].IsAvailable = false
+		}
+		workers[i].Containers = containers
 	}
-	return c.JSON(http.StatusOK, containerStatuses)
+	return c.JSON(http.StatusOK, workers)
 }
 
 // putHandler accepts `kubectl apply`
@@ -36,4 +40,9 @@ func putHandler(c echo.Context) error {
 		return err
 	}
 	return c.JSON(http.StatusOK, spec)
+}
+
+// receives events from workers
+func postEventHandler(c echo.Context) error {
+	return nil
 }

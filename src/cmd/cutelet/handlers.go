@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"log"
 	"net/http"
 
 	"github.com/docker/docker/api/types"
@@ -24,6 +25,7 @@ func postCreateHandler(c echo.Context) error {
 
 func getContainersHandler(c echo.Context) error {
 	containers, err := cli.ContainerList(context.Background(), types.ContainerListOptions{})
+	log.Println(containers)
 	if err != nil {
 		return err
 	}

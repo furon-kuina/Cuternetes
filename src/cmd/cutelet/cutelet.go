@@ -39,6 +39,9 @@ func init() {
 	yaml.Unmarshal(data, &c8sConfig)
 	workerName = os.Getenv("WORKER_NAME")
 	for _, worker := range c8sConfig.Workers {
+		log.Printf(worker.Url)
+		log.Printf(worker.Name)
+		log.Printf(workerName)
 		if worker.Name == workerName {
 			tmp := strings.Split(worker.Url, ":")
 			port = fmt.Sprint(tmp[len(tmp)-1])
@@ -57,5 +60,6 @@ func main() {
 	setRoutes(e)
 	logger := slog.New(slog.NewTextHandler(os.Stdout, nil))
 	e.Use(slogecho.New(logger))
+	log.Printf("Hello, world!")
 	e.Logger.Fatal(e.Start(":" + fmt.Sprint(port)))
 }
