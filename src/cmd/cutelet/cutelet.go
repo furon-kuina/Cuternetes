@@ -53,6 +53,7 @@ func setRoutes(e *echo.Echo) {
 	e.GET("/", getDefaultHandler)
 	e.GET("/containers", getContainersHandler)
 	e.POST("/create", postCreateHandler)
+	e.POST("/delete", postDeleteHandler)
 }
 
 func main() {
@@ -63,3 +64,5 @@ func main() {
 	log.Printf("Hello, world!")
 	e.Logger.Fatal(e.Start(":" + fmt.Sprint(port)))
 }
+
+// TODO: keep sending heartbeat in case of network error

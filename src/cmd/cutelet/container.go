@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"io"
+	"log"
 	"os"
 
 	"github.com/docker/docker/api/types"
@@ -23,13 +24,26 @@ func createContainer(c *c8s.ContainerSpec) (err error) {
 		&container.Config{
 			Image: c.Image,
 			Cmd:   c.Cmd,
-		}, nil, nil, nil, "")
+		}, nil, nil, nil, c.Name)
 
 	if err = cli.ContainerStart(ctx, resp.ID, types.ContainerStartOptions{}); err != nil {
 		return fmt.Errorf("failed to start container: %v", err)
 	}
 
-	fmt.Printf("Started container with ID %s", resp.ID)
+	log.Printf("Started container with ID %s", resp.ID)
+	return nil
+}
+
+func deleteContainer(containerId string) (err error) {
+	defer c8s.Wrap(&err, "deleteContainer(%q)", containerId)
+	ctx := context.Background()
+	if err := cli.ContainerStop(ctx, containerId, container.StopOptions{}); err != nil {
+		return err
+	}
+	if err := cli.ContainerRemove(ctx, containerId, types.ContainerRemoveOptions{}); err != nil {
+		return err
+	}
+	log.Printf("Deleted container with ID %s", containerId)
 	return nil
 }
 

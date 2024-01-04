@@ -15,12 +15,21 @@ func postCreateHandler(c echo.Context) error {
 	if err := c.Bind(container); err != nil {
 		return err
 	}
-
 	if err := createContainer(container); err != nil {
 		return err
 	}
+	return c.JSON(http.StatusOK, container)
+}
 
-	return c.JSON(http.StatusCreated, container)
+func postDeleteHandler(c echo.Context) error {
+	container := new(types.Container)
+	if err := c.Bind(container); err != nil {
+		return err
+	}
+	if err := deleteContainer(container.ID); err != nil {
+		return err
+	}
+	return c.JSON(http.StatusOK, container)
 }
 
 func getContainersHandler(c echo.Context) error {

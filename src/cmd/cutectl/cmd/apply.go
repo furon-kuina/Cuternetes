@@ -89,8 +89,7 @@ func applySpec(spec c8s.Spec) (err error) {
 	if err != nil {
 		return
 	}
-	apiServerUrl := "http://" + c8sConfig.ApiServer.Ip + ":" + c8sConfig.ApiServer.Port + "/"
-	req, err := http.NewRequest("PUT", apiServerUrl, bytes.NewBuffer([]byte(specData)))
+	req, err := http.NewRequest("PUT", c8sConfig.ApiServer.Url, bytes.NewBuffer([]byte(specData)))
 	if err != nil {
 		return
 	}

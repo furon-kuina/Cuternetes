@@ -10,6 +10,7 @@ import (
 	"github.com/labstack/echo/v4"
 )
 
+// getContainersHanlder handles `cutectl get containers`
 func getContainersHandler(c echo.Context) error {
 	workers := make([]c8s.Worker, len(c8sConfig.Workers))
 	for i, worker := range c8sConfig.Workers {
@@ -33,7 +34,7 @@ func getContainersHandler(c echo.Context) error {
 	return c.JSON(http.StatusOK, workers)
 }
 
-// putHandler accepts `kubectl apply`
+// putHandler handles `cutectl apply`
 func putHandler(c echo.Context) error {
 	spec := new(c8s.Spec)
 	if err := c.Bind(spec); err != nil {
@@ -44,5 +45,9 @@ func putHandler(c echo.Context) error {
 
 // receives events from workers
 func postEventHandler(c echo.Context) error {
-	return nil
+	event := new(c8s.ContainerEvent)
+	if err := c.Bind(event); err != nil {
+		return err
+	}
+	return c.JSON(http.StatusOK, event)
 }

@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"fmt"
 	"io"
 	"log"
 	"os"
@@ -12,10 +13,13 @@ import (
 )
 
 var (
-	c8sConfig c8s.C8sConfig
+	c8sConfig     c8s.C8sConfig
+	spec          c8s.Spec
+	workerConfigs = make(map[string]c8s.WorkerConfig)
 )
 
-const c8sConfigPath string = "../../config.yaml"
+const c8sConfigPath string = "/home/tenma/src/github.com/furon-kuina/Cuternetes/src/cmd/config.yaml"
+const c8sSpecPath string = "/home/tenma/src/github.com/furon-kuina/Cuternetes/src/cmd/cutectl/specs.yaml"
 
 func init() {
 	f, err := os.Open(c8sConfigPath)
@@ -24,6 +28,24 @@ func init() {
 	}
 	data, err := io.ReadAll(f)
 	yaml.Unmarshal(data, &c8sConfig)
+	fmt.Printf("config: %+v\n", c8sConfig)
+
+	for _, workerConfig := range c8sConfig.Workers {
+		workerConfigs[workerConfig.Name] = workerConfig
+	}
+
+	f, err = os.Open(c8sSpecPath)
+	if err != nil {
+		log.Fatalf("failed to open spec file: %v", err)
+	}
+	data, err = io.ReadAll(f)
+	yaml.Unmarshal(data, &spec)
+	fmt.Printf("specs: %+v\n", spec)
+}
+
+func validateSpecs(specs c8s.Spec) bool {
+	// names need to be unique
+	return true
 }
 
 func main() {
@@ -34,10 +56,11 @@ func main() {
 
 	ctx := context.Background()
 	c := NewContainerController(ctx)
-	c.Run(ctx)
+	c.Reconcile()
 }
 
 func setRoutes(e *echo.Echo) {
 	e.GET("/containers", getContainersHandler)
 	e.PUT("/", putHandler)
+	e.POST("/events", postEventHandler)
 }

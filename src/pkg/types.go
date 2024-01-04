@@ -43,6 +43,10 @@ type ApiServerConfig struct {
 
 type ContainerStatus string
 
+type ContainerEvent struct {
+	EventType string
+}
+
 const (
 	Created    ContainerStatus = "created"
 	Restarting ContainerStatus = "restarting"
